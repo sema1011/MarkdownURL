@@ -1,12 +1,10 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Linters
+.ruff_cache/
+*.pyc
+*.pyo
+*.pyd
 
-# C extensions
-*.so
-
-# Distribution / packaging
+# Python distribution artifacts
 .Python
 build/
 develop-eggs/
