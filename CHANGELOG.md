@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fetcher.__init__` принимает параметр `transport` для инъекции моков в тестах
 - `fetch_article()` принимает параметр `transport` для тестирования
 - Все тесты используют `httpx.MockTransport` через pytest fixture
+- Покрытие кода: **85%** (было 78%)
+
+### Added
+- Интеграционные тесты: `TestFetchArticle` (10 тестов), `TestFetchArticles` (3 теста)
+- Тесты CLI: пустой контент, скачивание изображений, коды ошибок
+- Тест `TestMain` для модуля `__main__`
+
+### Statistics
+- Всего тестов: **163** (137 unit + 26 CLI)
+- Покрытие: **85%** (цель 80%) ✅
 
 ## [1.0.0] - 2026-09-23
 
