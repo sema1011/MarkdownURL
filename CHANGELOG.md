@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BUG-13**: `fetcher.py`: добавлен `return response`, `time.sleep()`, `raise ... from None`
 - **QUAL-9**: Ruff linting: сортировка импортов, удалены неиспользуемые переменные
 - **QUAL-10**: `assert False` → `raise AssertionError()` в тестах
+- **QUAL-11**: Удалены неиспользуемые импорты в `tests/test_api.py`
 
 ### Changed
 - `Fetcher.__init__` принимает параметр `transport` для инъекции моков в тестах

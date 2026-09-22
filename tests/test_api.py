@@ -3,12 +3,8 @@
 from pathlib import Path
 
 import httpx
-import pytest
-from click.testing import CliRunner
 
 from markdownurl import fetch_article, fetch_articles
-from markdownurl.cli import cli
-from markdownurl.fetcher import Fetcher
 
 
 def _make_transport(text: str | None = None) -> httpx.MockTransport:
