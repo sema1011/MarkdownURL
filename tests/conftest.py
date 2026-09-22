@@ -39,7 +39,9 @@ def _patch_fetcher_transport(mock_transport):
     original_init = Fetcher.__init__
 
     def patched_init(self, *args, **kwargs):
-        kwargs["transport"] = mock_transport
+        # Не переопределять transport, если он уже передан
+        if "transport" not in kwargs or kwargs["transport"] is None:
+            kwargs["transport"] = mock_transport
         original_init(self, *args, **kwargs)
 
     Fetcher.__init__ = patched_init

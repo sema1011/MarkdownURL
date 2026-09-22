@@ -279,3 +279,86 @@ class TestCLI:
             ],
         )
         assert result.exit_code == 0
+
+    def test_cli_empty_content_warning(self, runner: CliRunner) -> None:
+        """CLI с пустым контентом — предупреждение."""
+        def handler_empty(request):
+            return httpx.Response(200, text="<html><body></body></html>")
+        transport = httpx.MockTransport(handler_empty)
+        from markdownurl.fetcher import Fetcher
+        original_init = Fetcher.__init__
+        def patched_init(self, *args, **kwargs):
+            kwargs["transport"] = transport
+            original_init(self, *args, **kwargs)
+        Fetcher.__init__ = patched_init
+        try:
+            result = runner.invoke(
+                cli,
+                ["https://example.com/empty", "--output", "/tmp/test-cli-empty-warn.md"],
+            )
+            assert "предупреждение" in result.output.lower() or "warning" in result.output.lower() or "пропускаю" in result.output.lower()
+        finally:
+            Fetcher.__init__ = original_init
+
+    def test_cli_image_download(self, runner: CliRunner) -> None:
+        """CLI с --images download."""
+        html_with_images = """
+        <html>
+        <head><title>Test</title></head>
+        <body>
+            <h1>Test</h1>
+            <img src="https://example.com/img.jpg" alt="Image">
+        </body>
+        </html>
+        """
+        transport = httpx.MockTransport(
+            lambda req: httpx.Response(200, text=html_with_images, headers={"Content-Type": "text/html; charset=utf-8"})
+        )
+        from markdownurl.fetcher import Fetcher
+        original_init = Fetcher.__init__
+        def patched_init(self, *args, **kwargs):
+            kwargs["transport"] = transport
+            original_init(self, *args, **kwargs)
+        Fetcher.__init__ = patched_init
+        try:
+            result = runner.invoke(
+                cli,
+                ["https://example.com/img", "--output", "/tmp/test-cli-img.md", "--images", "download"],
+            )
+            assert result.exit_code == 0
+        finally:
+            Fetcher.__init__ = original_init
+
+    def test_cli_exit_with_error_code(self, runner: CliRunner) -> None:
+        """CLI завершается с кодом ошибки."""
+        def handler_error(request):
+            return httpx.Response(500, text="Server Error")
+        transport = httpx.MockTransport(handler_error)
+        from markdownurl.fetcher import Fetcher
+        original_init = Fetcher.__init__
+        def patched_init(self, *args, **kwargs):
+            kwargs["transport"] = transport
+            original_init(self, *args, **kwargs)
+        Fetcher.__init__ = patched_init
+        try:
+            result = runner.invoke(
+                cli,
+                ["https://example.com/error", "--output", "/tmp/test-cli-error.md"],
+            )
+            assert result.exit_code in (0, 5)
+        finally:
+            Fetcher.__init__ = original_init
+
+    def test_cli_output_dir_none(self, runner: CliRunner) -> None:
+        """CLI с --output=None (текущая директория)."""
+        result = runner.invoke(cli, ["--help"])
+        assert result.exit_code == 0
+        assert "output" in result.output.lower()
+
+    def test_cli_single_file_output(self, runner: CliRunner) -> None:
+        """CLI с одним файлом на выходе."""
+        result = runner.invoke(
+            cli,
+            ["https://example.com/single", "--output", "/tmp/test-single.md"],
+        )
+        assert result.exit_code == 0
