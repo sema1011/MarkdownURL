@@ -10,8 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **BUG-14**: Удалены `¶` (U+00B6) и zero-width space (U+200B) из Markdown-вывода
 
-## [1.0.4] - 2026-09-23
-
 ### Changed
 - `pyproject.toml` — добавлены `exclude` для `hatch.build` (исключены tests, кэши из билдов)
 
