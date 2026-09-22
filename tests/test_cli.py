@@ -86,7 +86,7 @@ class TestCLI:
         """CLI с несуществующим --from-file."""
         result = self.runner.invoke(cli, ["--from-file", "/nonexistent/urls.txt"])
         assert result.exit_code == 2
-        assert "найден" in result.output.lower()
+        assert "not found" in result.output.lower() or "не найден" in result.output.lower()
 
     @respx.mock
     def test_cli_no_frontmatter(self) -> None:
