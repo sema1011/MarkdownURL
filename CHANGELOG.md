@@ -5,12 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
 ## [1.0.4] - 2026-09-23
 
 ### Changed
 - `.gitignore` — консолидированы паттерны кэшей (`.ruff_cache/`, `*.pyc`, `*.pyo`)
+- `pyproject.toml` — добавлены `exclude` для `hatch.build` (исключены tests, кэши из билдов)
 
 ## [1.0.3] - 2026-09-23
 
@@ -87,7 +86,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD пайплайн с тестированием на Python 3.10-3.13
 - Поддержка изображений без атрибута `alt` в HTML-тегах
 - Кэширование YAML фронтматера в `ArticleResult`
-- `.gitignore` — исключение кэшей, виртуальных окружений, attachments
 - `SECURITY.md` — политика безопасности и reporting уязвимостей
 - CLI-тесты: 26 тестов (respx, click.testing)
 - Полное покрытие CLI: все опции, ошибки, файлы, комбинации
