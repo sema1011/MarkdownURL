@@ -37,6 +37,9 @@ class Converter:
         """
         text = markdown
 
+        # 0. Убрать ¶ (U+00B6) и zero-width space (U+200B)
+        text = re.sub(r'[\u00b6\u200b]', '', text)
+
         # 1. Конвертация <mark> → ==текст==
         text = self._convert_highlights(text)
 
