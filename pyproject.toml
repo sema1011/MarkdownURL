@@ -47,8 +47,32 @@ dev = [
 [project.scripts]
 markdownurl = "markdownurl.cli:cli"
 
+[tool.hatch.build]
+ignore-vcs = true
+exclude = [
+    "tests/",
+    ".github/",
+    ".pytest_cache/",
+    ".ruff_cache/",
+    "__pycache__/",
+    "*.pyc",
+    "*.pyo",
+    "MANIFEST.in",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["markdownurl"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "tests/",
+    ".github/",
+    ".pytest_cache/",
+    ".ruff_cache/",
+    "__pycache__/",
+    "*.pyc",
+    "*.pyo",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
