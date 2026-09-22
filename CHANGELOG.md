@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-09-23
+
+### Changed
+- `.gitignore` — консолидированы паттерны кэшей (`.ruff_cache/`, `*.pyc`, `*.pyo`)
+
+## [1.0.3] - 2026-09-23
+
+### Fixed
+- **QUAL-11**: Удалены неиспользуемые импорты в `tests/test_api.py`
+
+## [1.0.2] - 2026-09-23
+
 ### Fixed
 - **BUG-10**: `TimeoutError` переименован в `FetchTimeoutError` (shadow builtin)
 - **BUG-11**: CLI-опция `--format` → `--link-format` (shadow builtin)
@@ -14,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BUG-13**: `fetcher.py`: добавлен `return response`, `time.sleep()`, `raise ... from None`
 - **QUAL-9**: Ruff linting: сортировка импортов, удалены неиспользуемые переменные
 - **QUAL-10**: `assert False` → `raise AssertionError()` в тестах
-- **QUAL-11**: Удалены неиспользуемые импорты в `tests/test_api.py`
 
 ### Changed
 - `Fetcher.__init__` принимает параметр `transport` для инъекции моков в тестах
@@ -31,17 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Всего тестов: **163** (137 unit + 26 CLI)
 - Покрытие: **85%** (цель 80%) ✅
 
-## [1.0.0] - 2026-09-23
-
-### Added
-- Базовый набор тестов (127 тестов) для всех модулей
-- CI/CD пайплайн с тестированием на Python 3.10-3.13
-- Поддержка изображений без атрибута `alt` в HTML-тегах
-- Кэширование YAML фронтматера в `ArticleResult`
-- `.gitignore` — исключение кэшей, виртуальных окружений, attachments
-- `SECURITY.md` — политика безопасности и reporting уязвимостей
-- CLI-тесты: 26 тестов (respx, click.testing)
-- Полное покрытие CLI: все опции, ошибки, файлы, комбинации
+## [1.0.1] - 2026-09-23
 
 ### Fixed
 - **BUG-1**: Опечатка в CLI — `"d"` → `"download"` в `cli.py`
@@ -57,9 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DEAD-2**: Объединены `_convert_math_span` и `_convert_math`
 - **DEAD-3**: `import time` перемещён в начало файлов
 - **DEAD-4**: Создан `__main__.py` для `python -m markdownurl`
+- **QUAL-2**: Все локальные импорты перемещены в верх файлов
 - **QUAL-3**: `except Exception` заменён на конкретные исключения
 - **QUAL-4**: `assert last_exc` заменён на `raise FetchError`
-- **QUAL-2**: Все локальные импорты перемещены в верх файлов
 - Исправлены баги в regex: `_convert_mermaid`, `_to_wikilinks`, `_absolute_links`, `_replace_image_links`
 - **QUAL-6**: Удалён избыточный `import hashlib` в `images.py`
 - **QUAL-7**: Удалён избыточный `except Exception: raise` в `cli.py`
@@ -78,6 +79,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Statistics
 - Всего тестов: **153** (127 unit + 26 CLI)
 - Все тесты проходят ✅
+
+## [1.0.0] - 2026-09-23
+
+### Added
+- Базовый набор тестов (127 тестов) для всех модулей
+- CI/CD пайплайн с тестированием на Python 3.10-3.13
+- Поддержка изображений без атрибута `alt` в HTML-тегах
+- Кэширование YAML фронтматера в `ArticleResult`
+- `.gitignore` — исключение кэшей, виртуальных окружений, attachments
+- `SECURITY.md` — политика безопасности и reporting уязвимостей
+- CLI-тесты: 26 тестов (respx, click.testing)
+- Полное покрытие CLI: все опции, ошибки, файлы, комбинации
 
 ## [0.1.0] - 2026-09-22
 
