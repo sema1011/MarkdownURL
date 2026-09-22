@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **BUG-10**: `TimeoutError` переименован в `FetchTimeoutError` (shadow builtin)
+- **BUG-11**: CLI-опция `--format` → `--link-format` (shadow builtin)
+- **BUG-12**: CLI-тесты: respx заменён на `httpx.MockTransport` (надёжное мокирование)
+- **BUG-13**: `fetcher.py`: добавлен `return response`, `time.sleep()`, `raise ... from None`
+- **QUAL-9**: Ruff linting: сортировка импортов, удалены неиспользуемые переменные
+- **QUAL-10**: `assert False` → `raise AssertionError()` в тестах
+
+### Changed
+- `Fetcher.__init__` принимает параметр `transport` для инъекции моков в тестах
+- `fetch_article()` принимает параметр `transport` для тестирования
+- Все тесты используют `httpx.MockTransport` через pytest fixture
+
 ## [1.0.0] - 2026-09-23
 
 ### Added
