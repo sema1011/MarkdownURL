@@ -69,7 +69,7 @@ class TestArticleResult:
         )
         try:
             result.save()
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from hashlib import md5
 from pathlib import Path
-from urllib.parse import unquote, urlparse, urljoin
+from urllib.parse import unquote, urljoin, urlparse
 
 import httpx
 
@@ -166,8 +166,6 @@ class ImageProcessor:
     def _replace_image_links(self, markdown: str, replacements: dict) -> str:
         """Заменить ссылки на изображения в Markdown на Obsidian-эмбеды."""
         def _replace(match: re.Match) -> str:
-            prefix = match.group(1) or ""  # "!" для изображений
-            alt = match.group(2) or ""
             url = match.group(3) or match.group(2)
 
             if url in replacements:
@@ -188,7 +186,6 @@ class ImageProcessor:
         # Обрабатываем HTML <img> теги, которые могли остаться
         def _replace_html_img(match: re.Match) -> str:
             src = match.group(1) or ""
-            alt = match.group(2) or ""
 
             if src in replacements:
                 filename, width = replacements[src]

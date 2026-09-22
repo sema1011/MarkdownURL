@@ -5,7 +5,6 @@ from __future__ import annotations
 import locale
 import os
 
-
 # --- Translations ---
 
 TRANSLATIONS: dict[str, dict[str, str]] = {

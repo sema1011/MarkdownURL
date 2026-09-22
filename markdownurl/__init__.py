@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
+
+import httpx
 
 from markdownurl.converter import Converter
 from markdownurl.exceptions import (
     ExtractionError,
     FetchError,
+    FetchTimeoutError,
     FileWriteError,
     ImageDownloadError,
     MarkdownURLError,
-    TimeoutError,
 )
 from markdownurl.extractor import ArticleMetadata, Extractor, ImageInfo
 from markdownurl.fetcher import Fetcher
@@ -89,6 +91,7 @@ def fetch_article(
     date_prefix: bool = False,
     block_ids: bool = False,
     user_agent: str | None = None,
+    transport: httpx.BaseTransport | None = None,
 ) -> ArticleResult:
     """Извлечь статью по URL и сохранить в Markdown.
 
@@ -113,7 +116,7 @@ def fetch_article(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Инициализируем компоненты
-    fetcher = Fetcher(timeout=timeout, user_agent=user_agent)
+    fetcher = Fetcher(timeout=timeout, user_agent=user_agent, transport=transport)
     extractor = Extractor()
     converter = Converter()
     frontmatter_gen = FrontmatterGenerator()
@@ -248,7 +251,7 @@ __all__ = [
     "ExtractionError",
     "FileWriteError",
     "ImageDownloadError",
-    "TimeoutError",
+    "FetchTimeoutError",
     "ArticleMetadata",
     "ImageInfo",
 ]

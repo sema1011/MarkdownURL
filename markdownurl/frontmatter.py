@@ -6,6 +6,7 @@ from datetime import date
 from typing import Any
 
 import yaml
+
 from markdownurl.extractor import ArticleMetadata
 
 

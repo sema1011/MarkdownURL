@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import re
+import time
 
 import httpx
 
-from markdownurl.exceptions import FetchError, TimeoutError
+from markdownurl.exceptions import FetchError, FetchTimeoutError
 
 BROWSER_UA = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -31,10 +32,12 @@ class Fetcher:
         timeout: float = 10.0,
         max_retries: int = 3,
         user_agent: str | None = None,
+        transport: httpx.BaseTransport | None = None,
     ) -> None:
         self.timeout = timeout
         self.max_retries = max_retries
         self.user_agent = user_agent or BROWSER_UA
+        self.transport = transport
 
     def fetch(self, url: str) -> httpx.Response:
         """Загрузить страницу с повторными попытками при 5xx."""
@@ -48,7 +51,10 @@ class Fetcher:
 
         for attempt in range(1, self.max_retries + 1):
             try:
-                with httpx.Client(follow_redirects=True) as client:
+                with httpx.Client(
+                    transport=self.transport,
+                    follow_redirects=True,
+                ) as client:
                     response = client.get(
                         url, headers=headers, timeout=self.timeout
                     )
@@ -66,23 +72,23 @@ class Fetcher:
                     )
                     if attempt < self.max_retries:
                         # Экспоненциальная задержка: 1s, 2s, 4s
-                        delay = 2 ** (attempt - 1)
+                        time.sleep(2 ** (attempt - 1))
                         continue
-                    raise last_exc
+                    raise last_exc from None
 
                 return response
 
             except httpx.TimeoutException:
-                last_exc = TimeoutError(url, self.timeout)
+                last_exc = FetchTimeoutError(url, self.timeout)
                 if attempt < self.max_retries:
                     continue
-                raise last_exc
+                raise last_exc from None
 
             except httpx.RequestError as exc:
                 last_exc = FetchError(url, f"Ошибка запроса: {exc}")
                 if attempt < self.max_retries:
                     continue
-                raise last_exc
+                raise last_exc from None
 
         raise FetchError(url, "Max retries exceeded")
 

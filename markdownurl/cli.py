@@ -12,9 +12,9 @@ from markdownurl.converter import Converter
 from markdownurl.exceptions import (
     ExtractionError,
     FetchError,
+    FetchTimeoutError,
     FileWriteError,
     MarkdownURLError,
-    TimeoutError,
 )
 from markdownurl.extractor import Extractor
 from markdownurl.fetcher import Fetcher
@@ -22,7 +22,6 @@ from markdownurl.frontmatter import FrontmatterGenerator
 from markdownurl.images import ImageProcessor
 from markdownurl.namer import Namer
 from markdownurl.translations import t
-
 
 IMAGE_MODES = click.Choice(["link", "download", "skip"], case_sensitive=False)
 LINK_FORMATS = click.Choice(["wikilink", "markdown"], case_sensitive=False)
@@ -83,7 +82,7 @@ def _read_urls_file(filepath: str) -> list[str]:
     help=t("opt_images_dir"),
 )
 @click.option(
-    "--format",
+    "--link-format",
     type=LINK_FORMATS,
     default="wikilink",
     help=t("opt_link_format"),
@@ -126,7 +125,7 @@ def cli(
     timeout: float,
     images: str,
     images_dir: str,
-    format: str,
+    link_format: str,
     conflict: str,
     date_prefix: bool,
     block_ids: bool,
@@ -180,7 +179,7 @@ def cli(
             if images == "download" and img_infos:
                 md_content = image_proc.process_images(md_content, url, img_infos)
 
-            md_content = converter.convert(md_content, url=url, link_format=format, block_ids=block_ids)
+            md_content = converter.convert(md_content, url=url, link_format=link_format, block_ids=block_ids)
             fm = frontmatter_gen.generate(meta, url, include_frontmatter=not no_frontmatter)
 
             if output and not Path(output).is_dir() and i == 0 and len(url_list) == 1:
@@ -218,7 +217,7 @@ def cli(
                 error_count += 1
                 last_error_code = 2
 
-        except TimeoutError as exc:
+        except FetchTimeoutError as exc:
             click.echo(t("warn_generic", msg=exc), err=True)
             error_count += 1
             last_error_code = 3

@@ -10,6 +10,7 @@ class TestExtractExtension:
     def setup_method(self) -> None:
         import tempfile
         from pathlib import Path
+
         from markdownurl.namer import Namer
 
         self.tmp_dir = Path(tempfile.mkdtemp())
@@ -50,6 +51,7 @@ class TestImageProcessor:
     def setup_method(self) -> None:
         import tempfile
         from pathlib import Path
+
         from markdownurl.namer import Namer
 
         self.tmp_dir = Path(tempfile.mkdtemp())
@@ -90,6 +92,7 @@ class TestReplaceImageLinks:
     def setup_method(self) -> None:
         import tempfile
         from pathlib import Path
+
         from markdownurl.namer import Namer
 
         self.tmp_dir = Path(tempfile.mkdtemp())
@@ -130,6 +133,7 @@ class TestGenerateFilename:
     def setup_method(self) -> None:
         import tempfile
         from pathlib import Path
+
         from markdownurl.namer import Namer
 
         self.tmp_dir = Path(tempfile.mkdtemp())

@@ -19,7 +19,7 @@ class FetchError(MarkdownURLError):
         super().__init__(full_message)
 
 
-class TimeoutError(MarkdownURLError):
+class FetchTimeoutError(MarkdownURLError):
     """Таймаут запроса."""
 
     def __init__(self, url: str, timeout: float) -> None:

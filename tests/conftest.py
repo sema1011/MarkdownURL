@@ -1,9 +1,50 @@
 """Конфигурация тестов MarkdownURL."""
 
-import tempfile
 from pathlib import Path
 
+import httpx
 import pytest
+
+from markdownurl.fetcher import Fetcher
+
+
+@pytest.fixture()
+def mock_transport():
+    """Создать мокированный HTTP-транспорт для всех тестов."""
+    def handler(request):
+        return httpx.Response(
+            200,
+            text="""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Test Article</title>
+                <meta name="author" content="Test Author">
+                <meta name="description" content="Test description">
+            </head>
+            <body>
+                <h1>Test Article Title</h1>
+                <p>This is a test paragraph with <a href="https://example.com/link">a link</a>.</p>
+            </body>
+            </html>
+            """,
+            headers={"Content-Type": "text/html; charset=utf-8"},
+        )
+    return httpx.MockTransport(handler)
+
+
+@pytest.fixture(autouse=True)
+def _patch_fetcher_transport(mock_transport):
+    """Автоматически внедрить mock_transport в Fetcher для всех тестов."""
+    original_init = Fetcher.__init__
+
+    def patched_init(self, *args, **kwargs):
+        kwargs["transport"] = mock_transport
+        original_init(self, *args, **kwargs)
+
+    Fetcher.__init__ = patched_init
+    yield
+    Fetcher.__init__ = original_init
 
 
 @pytest.fixture()

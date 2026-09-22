@@ -1,5 +1,7 @@
 """Тесты для модуля extractor — извлечение контента."""
 
+from bs4 import BeautifulSoup
+
 from markdownurl.extractor import (
     ArticleMetadata,
     Extractor,
@@ -8,7 +10,6 @@ from markdownurl.extractor import (
     _extract_meta_tags,
     _parse_date,
 )
-from bs4 import BeautifulSoup
 
 
 class TestArticleMetadata:

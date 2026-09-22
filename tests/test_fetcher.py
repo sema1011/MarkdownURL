@@ -1,7 +1,7 @@
 """Тесты для модуля fetcher — HTTP-клиент."""
 
+from markdownurl.exceptions import FetchError
 from markdownurl.fetcher import Fetcher
-from markdownurl.exceptions import FetchError, TimeoutError
 
 
 class TestFetcher:
@@ -35,7 +35,7 @@ class TestFetcher:
         fetcher = Fetcher(timeout=1.0, max_retries=0)
         try:
             fetcher.fetch_and_decode("https://nonexistent.invalid.domain.test")
-            assert False, "Expected exception"
+            raise AssertionError("Expected exception")
         except FetchError:
             pass  # Expected
 

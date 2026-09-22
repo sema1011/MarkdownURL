@@ -3,10 +3,10 @@
 from markdownurl.exceptions import (
     ExtractionError,
     FetchError,
+    FetchTimeoutError,
     FileWriteError,
     ImageDownloadError,
     MarkdownURLError,
-    TimeoutError,
 )
 
 
@@ -47,14 +47,14 @@ class TestExtractionError:
         assert exc.url == "https://example.com"
 
 
-class TestTimeoutError:
-    """Тесты TimeoutError."""
+class TestFetchTimeoutError:
+    """Тесты FetchTimeoutError."""
 
     def test_inheritance(self) -> None:
-        assert issubclass(TimeoutError, MarkdownURLError)
+        assert issubclass(FetchTimeoutError, MarkdownURLError)
 
     def test_url_and_timeout(self) -> None:
-        exc = TimeoutError("https://example.com", 10.0)
+        exc = FetchTimeoutError("https://example.com", 10.0)
         assert exc.url == "https://example.com"
         assert exc.timeout == 10.0
 
