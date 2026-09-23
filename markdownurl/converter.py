@@ -40,6 +40,18 @@ class Converter:
         # 0. Убрать ¶ (U+00B6) и zero-width space (U+200B)
         text = re.sub(r'[\u00b6\u200b]', '', text)
 
+        # 0.1 Конвертация HTML-тегов форматирования → Markdown
+        text = self._convert_formatting_tags(text)
+
+        # 0.2 Параметры функций *param* → `param`
+        text = self._convert_function_params(text)
+
+        # 0.3 HTML-списки → Markdown-списки (ДО shell-команд, чтобы не трогать ``` блоки)
+        text = self._fix_html_lists(text)
+
+        # 0.4 Shell-команды → ```bash (ПОСЛЕ списков, чтобы не конфликтовать)
+        text = self._convert_shell_commands(text)
+
         # 1. Конвертация <mark> → ==текст==
         text = self._convert_highlights(text)
 
@@ -60,15 +72,213 @@ class Converter:
         if url:
             text = self._absolute_links(text, url)
 
-        # 7. Конвертация ссылок в wikilinks (опционально)
+        # 7. Конвертация ссылок
         if link_format == "wikilink":
             text = self._to_wikilinks(text)
+        elif link_format == "markdown":
+            text = self._to_markdown_links(text)
 
         # 8. Добавление block IDs (опционально)
         if block_ids:
             text = self._add_block_ids(text)
 
         return text
+
+    def _convert_formatting_tags(self, text: str) -> str:
+        """Конвертировать HTML-теги форматирования в Markdown."""
+        # <del>, <s>, <strike> → ~~текст~~
+        text = re.sub(
+            r'<(del|s|strike)[^>]*>(.*?)</\1>',
+            r'~~\2~~',
+            text,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+        return text
+
+    def _convert_function_params(self, text: str) -> str:
+        """Конвертировать *param* в `param` для сигнатур функций.
+
+        trafilatura извлекает параметры как *param_name*, которые markdownify
+        превратил бы в курсив. Для API-документации это нужно исправить.
+        """
+        # (class Name(*param* )[source] → (class Name(`param` )[source]
+        text = re.sub(
+            r'\(\*([^*]+)\*\)',
+            r'(`\1`)',
+            text,
+        )
+        # **kwargs* → **kwargs** не трогаем, это markdown-курсив
+        # Но *param* в контексте сигнатур — да
+        return text
+
+    def _convert_shell_commands(self, text: str) -> str:
+        """Оборачивает строки shell-команд в ```bash блоки.
+
+        Распознаёт команды, начинающиеся с:
+        - export, sudo, cd, find, grep, cat, echo, pip, apt, etc.
+        - строки, состоящие только из команд и аргументов
+        """
+        shell_keywords = (
+            'export', 'sudo', 'cd', 'find', 'grep', 'cat', 'echo',
+            'pip', 'apt', 'aptitude', 'apt-get', 'make', 'emake',
+            'doas', 'ebuild', 'tar', 'wget', 'curl', 'rm', 'mv',
+            'cp', 'chmod', 'chown', 'ls', 'mkdir', 'head', 'tail',
+            'sed', 'awk', 'xargs', 'sort', 'uniq', 'wc', 'diff',
+            'git', 'hg', 'svn', 'npm', 'yarn', 'go', 'rustc',
+            'python', 'python3', 'node', 'ruby', 'php', 'java',
+            'gcc', 'g++', 'clang', 'cmake', 'docker', 'kubectl',
+            'find', 'xargs', 'print0', 'set', 'unset', 'source',
+            'eval', 'alias', 'unalias', 'function',
+        )
+
+        lines = text.split('\n')
+        result: list[str] = []
+        in_code_block = False
+        buffer: list[str] = []
+
+        def _is_shell_line(line: str) -> bool:
+            stripped = line.strip()
+            if not stripped:
+                return False
+            # Пропускаем строки, которые уже являются частью markdown-структур
+            if stripped.startswith(('```', '#', '>', '|')):
+                return False
+            # Пропускаем строки с маркерами списков (- , * , + , 1. )
+            if re.match(r'^[-*+]\s', stripped):
+                return False
+            if re.match(r'^\d+\.\s', stripped):
+                return False
+            if stripped.startswith(shell_keywords):
+                return True
+            # Строка вида: VAR="value"
+            if re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', stripped):
+                return True
+            # Строка с операторами: &&, ||, |, >, >>, ;
+            if re.match(r'^[|;&>]+', stripped):
+                return True
+            # Строка вида: GOPROXY=... go ...
+            if re.match(r'^[A-Z_]+=.*\s+go\s+', stripped):
+                return True
+            return False
+
+        def _flush_buffer() -> None:
+            nonlocal buffer
+            if len(buffer) >= 1:
+                result.append('```bash')
+                result.extend(buffer)
+                result.append('```')
+            buffer = []
+
+        for line in lines:
+            # Внутри ``` блоков не трогаем
+            if line.strip().startswith('```'):
+                if in_code_block:
+                    in_code_block = False
+                else:
+                    _flush_buffer()
+                    in_code_block = True
+                result.append(line)
+                continue
+
+            if not in_code_block and _is_shell_line(line):
+                if buffer:
+                    _flush_buffer()
+                buffer.append(line)
+            else:
+                if buffer:
+                    _flush_buffer()
+                result.append(line)
+
+        if buffer:
+            _flush_buffer()
+
+        return '\n'.join(result)
+
+    def _fix_html_lists(self, text: str) -> str:
+        """Попытка восстановить Markdown-списки из артефактов trafilatura.
+
+        trafilatura извлекает <li> как текст без префиксов `- ` или `1. `.
+        Эта функция пытается распознать вложенные списки по отступам.
+        """
+        lines = text.split('\n')
+        result: list[str] = []
+        in_code_block = False
+
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+
+            # Пропускаем строки внутри ``` блоков
+            if line.strip().startswith('```'):
+                in_code_block = not in_code_block
+                result.append(line)
+                i += 1
+                continue
+
+            if in_code_block:
+                result.append(line)
+                i += 1
+                continue
+
+            # Проверяем, является ли строка элементом списка без маркера
+            # (имеет отступ и не начинается с `- `, `* `, `+ `, `1. `)
+            indent = len(line) - len(line.lstrip())
+
+            # Пропускаем строки, которые уже имеют маркеры
+            if stripped and re.match(r'^[-*+]\s', stripped):
+                result.append(line)
+                i += 1
+                continue
+            if stripped and re.match(r'^\d+\.\s', stripped):
+                result.append(line)
+                i += 1
+                continue
+
+            if stripped and not any(
+                stripped.startswith(prefix)
+                for prefix in ('- ', '* ', '+ ', '1. ', '2. ', '3. ', '4. ', '5. ', '6. ', '7. ', '8. ', '9. ', '0. ')
+            ) and not stripped.startswith('#') and not stripped.startswith('>'):
+                # Это потенциальный элемент списка
+                # Определяем уровень вложенности по отступу
+                level = indent // 2  # 2 пробела = 1 уровень
+                bullet = '-'
+                if level > 0:
+                    bullet = '*' if level % 3 == 1 else '+' if level % 3 == 2 else '-'
+
+                # Проверяем, что следующая строка тоже элемент списка
+                # (имеет больший или равный отступ)
+                if i + 1 < len(lines):
+                    next_stripped = lines[i + 1].strip()
+                    next_indent = len(lines[i + 1]) - len(lines[i + 1].lstrip())
+                    if next_stripped and next_indent >= indent:
+                        # Это элемент списка — добавляем маркер
+                        prefix = ' ' * (level * 2) + bullet + ' '
+                        result.append(prefix + stripped)
+                        i += 1
+                        # Обрабатываем последовательные элементы списка
+                        while i < len(lines):
+                            curr_stripped = lines[i].strip()
+                            curr_indent = len(lines[i]) - len(lines[i].lstrip())
+                            # Пропускаем строки с маркерами и внутри ```
+                            if curr_stripped and re.match(r'^[-*+]\s', curr_stripped):
+                                break
+                            if curr_stripped and re.match(r'^\d+\.\s', curr_stripped):
+                                break
+                            if curr_stripped and curr_indent >= indent:
+                                next_level = curr_indent // 2
+                                next_bullet = '*' if next_level % 3 == 1 else '+' if next_level % 3 == 2 else '-'
+                                prefix = ' ' * (next_level * 2) + next_bullet + ' '
+                                result.append(prefix + curr_stripped)
+                                i += 1
+                            else:
+                                break
+                        continue
+
+            result.append(line)
+            i += 1
+
+        return '\n'.join(result)
 
     def _convert_highlights(self, text: str) -> str:
         """Конвертировать <mark>...</mark> в ==текст==."""
@@ -252,6 +462,25 @@ class Converter:
 
         return text
 
+    def _to_markdown_links(self, text: str) -> str:
+        """Конвертировать wikilinks в markdown-ссылки."""
+        def _replace(match: re.Match) -> str:
+            wikilink = match.group(0)
+            inner = wikilink[2:-2]  # Remove [[ and ]]
+            if "|" in inner:
+                alias, target = inner.split("|", 1)
+                return f"[{alias}]({target})"
+            return f"[{inner}]({inner})"
+
+        # Match [[text]] or [[text|alias]] but not ![image]] or [[[nested
+        text = re.sub(
+            r'(?<!!)\[\[([^\]]+)\]\]',
+            _replace,
+            text,
+        )
+
+        return text
+
     def _add_block_ids(self, text: str) -> str:
         """Добавить ^block-id к ключевым параграфам."""
         lines = text.split("\n")
@@ -259,6 +488,10 @@ class Converter:
 
         for line in lines:
             stripped = line.strip()
+
+            # Пропускаем строки, которые состоят только из ^block-id (артефакты извлечения)
+            if re.match(r'^\s*-?\s*\^[a-f0-9]{8}\s*$', stripped):
+                continue
 
             skip_patterns = [
                 (lambda s: not s),
