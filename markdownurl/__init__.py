@@ -81,7 +81,7 @@ class ArticleResult:
 
 def fetch_article(
     url: str,
-    output: str | Path | None = None,
+    output_dir: str | Path | None = None,
     include_frontmatter: bool = True,
     timeout: float = 10.0,
     images: str = "link",
@@ -97,7 +97,7 @@ def fetch_article(
 
     Args:
         url: URL-адрес статьи.
-        output: Путь к выходному файлу. Если None — генерируется автоматически.
+        output_dir: Путь к выходному файлу или директории. Если None — генерируется автоматически.
         include_frontmatter: Включить YAML-фронтматер.
         timeout: Таймаут запроса в секундах.
         images: Стратегия обработки изображений (link/download/skip).
@@ -111,9 +111,9 @@ def fetch_article(
     Returns:
         ArticleResult с markdown-контентом и метаданными.
     """
-    output_path: Path | None = Path(output) if output else None
-    output_dir = output_path.parent if output_path and output_path.parent != Path(".") else Path(".")
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path: Path | None = Path(output_dir) if output_dir else None
+    out_dir = output_path.parent if output_path and output_path.parent != Path(".") else Path(".")
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     # Инициализируем компоненты
     fetcher = Fetcher(timeout=timeout, user_agent=user_agent, transport=transport)
@@ -122,7 +122,7 @@ def fetch_article(
     frontmatter_gen = FrontmatterGenerator()
     namer = Namer(date_prefix=date_prefix, on_conflict=conflict)
     image_proc = ImageProcessor(
-        output_dir=output_dir,
+        output_dir=out_dir,
         namer=namer,
         images_dir=images_dir,
         timeout=timeout,
@@ -165,7 +165,7 @@ def fetch_article(
                 url=url,
                 date_str=meta.date,
             )
-            filepath = output_dir / name
+            filepath = out_dir / name
 
         # Разрешение конфликтов
         resolved_path, action = namer.resolve_conflict(filepath)

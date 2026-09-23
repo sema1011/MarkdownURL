@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.4] - 2026-09-23
 
+### Changed
+- **API унификация**: `fetch_article(output=...)` → `fetch_article(output_dir=...)` — параметр унифицирован с `fetch_articles(output_dir=...)`
+
 ### Fixed
 - **BUG-14**: Удалены `¶` (U+00B6) и zero-width space (U+200B) из Markdown-вывода
 

@@ -42,7 +42,7 @@ class TestFetchArticle:
         output = tmp_path / "test.md"
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             transport=transport,
         )
         assert result.success is True
@@ -55,7 +55,7 @@ class TestFetchArticle:
         output = tmp_path / "fm.md"
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             include_frontmatter=True,
             transport=transport,
         )
@@ -69,7 +69,7 @@ class TestFetchArticle:
         output = tmp_path / "nofm.md"
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             include_frontmatter=False,
             transport=transport,
         )
@@ -82,7 +82,7 @@ class TestFetchArticle:
         output = tmp_path / "wiki.md"
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             link_format="wikilink",
             transport=transport,
         )
@@ -94,7 +94,7 @@ class TestFetchArticle:
         output = tmp_path / "md.md"
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             link_format="markdown",
             transport=transport,
         )
@@ -106,7 +106,7 @@ class TestFetchArticle:
         output = tmp_path / "blocks.md"
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             block_ids=True,
             transport=transport,
         )
@@ -119,7 +119,7 @@ class TestFetchArticle:
         transport = _make_transport()
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             conflict="skip",
             transport=transport,
         )
@@ -133,7 +133,7 @@ class TestFetchArticle:
         transport = _make_transport()
         result = fetch_article(
             "https://example.com/article",
-            output=str(output),
+            output_dir=str(output),
             conflict="overwrite",
             transport=transport,
         )
@@ -156,7 +156,7 @@ class TestFetchArticle:
         transport = _make_transport(text="<html><body></body></html>")
         result = fetch_article(
             "https://example.com/empty",
-            output="/tmp/empty.md",
+            output_dir="/tmp/empty.md",
             transport=transport,
         )
         assert result.success is False

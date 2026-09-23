@@ -108,21 +108,18 @@ result.save("output.md")     # Сохранить в файл
 ```python
 result = fetch_article(
     "https://example.com/article",
-    output="notes/article.md",  # Путь к файлу или директории
+    output_dir="notes/article.md",  # Путь к файлу или директории
     include_frontmatter=True,
     timeout=15,
     images="download",
     images_dir="assets/",
-    link_format="wikilink",      # Параметр link_format (не format)
+    link_format="wikilink",
     conflict="suffix",
     date_prefix=True,
     block_ids=False,
     user_agent="MyBot/1.0",
 )
 ```
-
-> [!warning]
-> `fetch_article` использует параметр `output`, а `fetch_articles` — `output_dir`. Это историческое несоответствие, которое будет унифицировано в будущей версии.
 
 #### Пакетное извлечение
 

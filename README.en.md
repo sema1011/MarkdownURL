@@ -108,21 +108,18 @@ result.save("output.md")     # Save to file
 ```python
 result = fetch_article(
     "https://example.com/article",
-    output="notes/article.md",  # Path to file or directory
+    output_dir="notes/article.md",  # Path to file or directory
     include_frontmatter=True,
     timeout=15,
     images="download",
     images_dir="assets/",
-    link_format="wikilink",      # link_format parameter (not format)
+    link_format="wikilink",
     conflict="suffix",
     date_prefix=True,
     block_ids=False,
     user_agent="MyBot/1.0",
 )
 ```
-
-> [!warning]
-> `fetch_article` uses the `output` parameter, while `fetch_articles` uses `output_dir`. This is a historical inconsistency that will be unified in a future version.
 
 #### Batch extraction
 
