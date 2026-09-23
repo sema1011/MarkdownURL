@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **QUAL-3**: `msg.format()` в `t()` обернут в `try/except KeyError`
 - **QUAL-4**: Все тесты в `test_cli.py` используют `tmp_path` вместо жёстко закодированных `/tmp/` путей
 - **QUAL-4**: Исправлен оставшийся `/tmp/empty.md` в `test_api.py`
+- **QUAL-5**: Ruff B904 — `raise FetchError(...) from None` в `fetcher.py`
+- **QUAL-6**: Ruff SIM105 — `contextlib.suppress()` вместо `try/except/pass` в `translations.py`
+- **QUAL-7**: Ruff F401 — удалён неиспользуемый `import os` в `test_cli.py`
 
 ### Changed
 - `Fetcher.fetch()` теперь вызывает `_validate_url()` перед отправкой запроса
@@ -32,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Converter._parse_blockquote_block()` использует константы regex и экранирует спецсимволы
 - `FrontmatterGenerator.frontmatter_to_yaml()` корректно маппит `aliases` → `og_title`
 - `translations.t()` безопасно обрабатывает несовпадающие kwargs
+- `translations.t()` использует `contextlib.suppress()` вместо `try/except/pass`
+- `Fetcher._validate_url()` использует `raise ... from None` для исключения цепочки traceback
 
 ### Statistics
 - Всего тестов: **~185** (добавлено ~18 новых)
