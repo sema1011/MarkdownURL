@@ -110,8 +110,20 @@ T = TRANSLATIONS[LOCALE]
 
 
 def t(key: str, **kwargs: str) -> str:
-    """Translate a key, optionally formatting with kwargs."""
+    """Translate a key, optionally formatting with kwargs.
+
+    Args:
+        key: Ключ перевода.
+        **kwargs: Аргументы для форматирования строки.
+
+    Returns:
+        Переведённая строка с подставленными аргументами.
+    """
     msg = T.get(key, key)
     if kwargs:
-        msg = msg.format(**kwargs)
+        try:
+            msg = msg.format(**kwargs)
+        except (KeyError, IndexError, ValueError):
+            # Если аргументы не соответствуют шаблону, возвращаем без форматирования
+            pass
     return msg

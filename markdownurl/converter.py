@@ -7,6 +7,44 @@ import re
 from html import unescape
 from urllib.parse import urljoin
 
+# Regex-паттерны для callouts (вынесены для переиспользования)
+_BLOCKQUOTE_CLASS_RE = re.compile(
+    r'<blockquote[^>]*class\s*=\s*["\']([^"\']*)["\'][^>]*>(.*?)</blockquote>',
+    re.DOTALL | re.IGNORECASE,
+)
+_BLOCKQUOTE_TITLE_RE = re.compile(
+    r'<p[^>]*>(.*?)</p>', re.DOTALL | re.IGNORECASE
+)
+
+
+def _escape_callout_field(text: str) -> str:
+    """Экранировать спецсимволы > и ! в полях callout для предотвращения инъекции Markdown.
+
+    Args:
+        text: Исходный текст для экранирования.
+
+    Returns:
+        Текст с экранированными спецсимволами.
+    """
+    if not text:
+        return text
+    # Экранируем > и ! внутри текста callout
+    # Заменяем > на \> и ! на \! для предотвращения Markdown-инъекций
+    # Исключение: символы в начале строки после > (часть цитаты)
+    lines = text.split('\n')
+    escaped_lines: list[str] = []
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith('>'):
+            # Часть цитаты — пропускаем
+            escaped_lines.append(line)
+        else:
+            # Экранируем > и ! внутри текста
+            escaped = re.sub(r'>', r'\\>', line)
+            escaped = re.sub(r'!', r'\\!', escaped)
+            escaped_lines.append(escaped)
+    return '\n'.join(escaped_lines)
+
 
 class Converter:
     """Постобработка Markdown-контента для Obsidian."""
@@ -100,15 +138,22 @@ class Converter:
 
         trafilatura извлекает параметры как *param_name*, которые markdownify
         превратил бы в курсив. Для API-документации это нужно исправить.
+
+        Regex ищет *param* в контексте скобок: (*param*), (*param1*, *param2*),
+        чтобы избежать ложных срабатываний на Markdown-курсиве.
         """
-        # (class Name(*param* )[source] → (class Name(`param` )[source]
+        # (*param*) → (`param`) — одиночный параметр
         text = re.sub(
             r'\(\*([^*]+)\*\)',
             r'(`\1`)',
             text,
         )
-        # **kwargs* → **kwargs** не трогаем, это markdown-курсив
-        # Но *param* в контексте сигнатур — да
+        # (*param1*, *param2*) → (`param1`, `param2`) — несколько параметров
+        text = re.sub(
+            r'\(\*([^*]+)\*,\s*\*([^*]+)\*\)',
+            r'(`\1`, `\2`)',
+            text,
+        )
         return text
 
     def _convert_shell_commands(self, text: str) -> str:
@@ -127,7 +172,7 @@ class Converter:
             'git', 'hg', 'svn', 'npm', 'yarn', 'go', 'rustc',
             'python', 'python3', 'node', 'ruby', 'php', 'java',
             'gcc', 'g++', 'clang', 'cmake', 'docker', 'kubectl',
-            'find', 'xargs', 'print0', 'set', 'unset', 'source',
+            'print0', 'set', 'unset', 'source',
             'eval', 'alias', 'unalias', 'function',
         )
 
@@ -357,11 +402,7 @@ class Converter:
         """Преобразовать блок blockquote в callout или обычную цитату."""
         full_block = "\n".join(block_lines)
 
-        bq_match = re.search(
-            r'<blockquote[^>]*class\s*=\s*["\']([^"\']*)["\'][^>]*>(.*?)</blockquote>',
-            full_block,
-            re.DOTALL | re.IGNORECASE,
-        )
+        bq_match = _BLOCKQUOTE_CLASS_RE.search(full_block)
 
         if bq_match:
             classes = bq_match.group(1).strip().split()
@@ -379,9 +420,7 @@ class Converter:
                         break
 
             if callout_type:
-                title_match = re.search(
-                    r'<p[^>]*>(.*?)</p>', content, re.DOTALL | re.IGNORECASE
-                )
+                title_match = _BLOCKQUOTE_TITLE_RE.search(content)
                 title = title_match.group(1).strip() if title_match else ""
                 body = re.sub(
                     r'<p[^>]*>(.*?)</p>', r'\1\n', content,
@@ -389,6 +428,10 @@ class Converter:
                 )
                 body = body.strip()
                 body = re.sub(r'<[^>]+>', '', body)
+
+                # Экранируем спецсимволы для предотвращения инъекции Markdown
+                title = _escape_callout_field(title)
+                body = _escape_callout_field(body)
 
                 if title:
                     return [

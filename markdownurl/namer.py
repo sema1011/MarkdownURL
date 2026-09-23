@@ -107,7 +107,7 @@ class Namer:
 
         Returns:
             Кортеж (новый_путь, действие).
-            действие: 'overwrite', 'skip', или 'suffixed'.
+            действие: 'new', 'overwrite', 'skip', или 'suffixed'.
         """
         if not filepath.exists():
             return filepath, "new"

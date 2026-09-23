@@ -77,6 +77,100 @@ class TestConverter:
         result = self.converter._absolute_links(text, "https://example.com/")
         assert result == "[Link](https://other.com/page)"
 
+    # TEST-2: Тесты для _convert_shell_commands
+    def test_convert_shell_commands_simple(self) -> None:
+        """Shell-команды оборачиваются в ```bash блоки."""
+        text = "sudo apt update\npip install requests"
+        result = self.converter._convert_shell_commands(text)
+        assert "```bash" in result
+
+    def test_convert_shell_commands_skips_code_blocks(self) -> None:
+        """Содержимое ``` блоков не обрабатывается."""
+        text = "```bash\nsudo apt update\n```\nsome text"
+        result = self.converter._convert_shell_commands(text)
+        lines = result.split("\n")
+        # Должен быть только один ```bash (из исходного блока)
+        assert lines.count("```bash") == 1
+
+    def test_convert_shell_commands_empty_line(self) -> None:
+        """Пустые строки не становятся shell-командами."""
+        text = "sudo apt update\n\nsome text"
+        result = self.converter._convert_shell_commands(text)
+        assert "\n\n" in result
+
+    # TEST-2: Тесты для _fix_html_lists
+    def test_fix_html_lists_basic(self) -> None:
+        """Восстановление простых списков по отступам."""
+        text = "First item\n  Second item\n    Nested item"
+        result = self.converter._fix_html_lists(text)
+        # Элементы должны получить маркеры
+        assert "-" in result or "*" in result or "+" in result
+
+    def test_fix_html_lists_skips_marked(self) -> None:
+        """Строки с существующими маркерами не обрабатываются."""
+        text = "- Already marked\n  * Also marked"
+        result = self.converter._fix_html_lists(text)
+        assert "- Already marked" in result
+
+    def test_fix_html_lists_preserves_code_blocks(self) -> None:
+        """Содержимое ``` блоков не обрабатывается."""
+        text = "```python\n- not a list\n```\n- real list"
+        result = self.converter._fix_html_lists(text)
+        assert "- real list" in result
+
+    # TEST-2: Тесты для _convert_callouts
+    def test_convert_callouts_note(self) -> None:
+        """Конвертация callout типа note."""
+        text = "> [!note] Important\n> This is a note"
+        result = self.converter._convert_callouts(text)
+        assert "> [!note]" in result
+
+    def test_convert_callouts_warning(self) -> None:
+        """Конвертация callout типа warning."""
+        text = "> [!warning] Careful\n> This is a warning"
+        result = self.converter._convert_callouts(text)
+        assert "> [!warning]" in result
+
+    def test_convert_callouts_escape_special_chars(self) -> None:
+        """Спецсимволы > и ! в заголовке callout экранируются."""
+        text = '> <blockquote class="info"><p>Title with > and ! chars</p><p>Content</p></blockquote>'
+        result = self.converter._convert_callouts(text)
+        # Спецсимволы должны быть экранированы
+        assert "\\>" in result or "\\!" in result
+
+    def test_convert_callouts_body_escape(self) -> None:
+        """Спецсимволы в теле callout экранируются."""
+        text = '> <blockquote class="info"><p>Title</p><p>Body with > quote and ! exclamation</p></blockquote>'
+        result = self.converter._convert_callouts(text)
+        # Спецсимволы должны быть экранированы
+        assert "\\>" in result
+
+    def test_convert_callouts_no_title(self) -> None:
+        """Callout без заголовка."""
+        text = "> [!tip]\n> Just content"
+        result = self.converter._convert_callouts(text)
+        assert "> [!tip]" in result
+
+    def test_convert_callouts_regular_blockquote(self) -> None:
+        """Обычный blockquote без класса остаётся без изменений."""
+        text = "> Just a regular quote\n> Second line"
+        result = self.converter._convert_callouts(text)
+        assert "> Just a regular quote" in result
+
+    # TEST-3: Тесты для _convert_function_params
+    def test_convert_function_params_single(self) -> None:
+        """Одиночный параметр функции."""
+        text = "func(*param*)"
+        result = self.converter._convert_function_params(text)
+        assert "`param`" in result
+
+    def test_convert_function_params_multiple(self) -> None:
+        """Несколько параметров функции."""
+        text = "func(*param1*, *param2*)"
+        result = self.converter._convert_function_params(text)
+        assert "`param1`" in result
+        assert "`param2`" in result
+
 
 class TestConvertMethod:
     """Тесты основного метода convert."""

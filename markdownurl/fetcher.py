@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import time
+from urllib.parse import urlparse
 
 import httpx
 
@@ -23,6 +24,38 @@ _META_CONTENT_TYPE = re.compile(
     re.IGNORECASE,
 )
 
+# Допустимые схемы URL
+_ALLOWED_SCHEMES = {"http", "https"}
+
+
+def _validate_url(url: str) -> None:
+    """Валидировать формат URL перед отправкой запроса.
+
+    Args:
+        url: URL для проверки.
+
+    Raises:
+        FetchError: Если URL имеет недопустимый формат или схему.
+    """
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in _ALLOWED_SCHEMES:
+            raise FetchError(
+                url,
+                f"Недопустимая схема URL: '{parsed.scheme}'. "
+                f"Разрешены только http:// и https://",
+            )
+        if not parsed.hostname:
+            raise FetchError(
+                url,
+                "Не удалось определить hostname из URL. "
+                "Проверьте формат URL.",
+            )
+    except FetchError:
+        raise
+    except Exception as exc:
+        raise FetchError(url, f"Недопустимый формат URL: {exc}")
+
 
 class Fetcher:
     """HTTP-клиент для загрузки веб-страниц."""
@@ -40,7 +73,17 @@ class Fetcher:
         self.transport = transport
 
     def fetch(self, url: str) -> httpx.Response:
-        """Загрузить страницу с повторными попытками при 5xx."""
+        """Загрузить страницу с повторными попытками при 5xx.
+
+        Args:
+            url: URL для загрузки.
+
+        Raises:
+            FetchError: Если URL имеет недопустимый формат или запрос не удался.
+        """
+        # Валидация URL перед отправкой запроса (CRIT-3)
+        _validate_url(url)
+
         headers = {
             "User-Agent": self.user_agent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",

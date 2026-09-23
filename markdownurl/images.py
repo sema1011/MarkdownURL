@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from hashlib import md5
+from ipaddress import ip_address, ip_network
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlparse
 
@@ -16,6 +17,54 @@ from markdownurl.namer import Namer
 IMAGE_EXTENSIONS = {
     ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico", ".avif",
 }
+
+# Приватные и внутренние сети, которые нужно блокировать
+_BLOCKED_NETWORKS = [
+    ip_network("10.0.0.0/8"),
+    ip_network("172.16.0.0/12"),
+    ip_network("192.168.0.0/16"),
+    ip_network("127.0.0.0/8"),
+    ip_network("0.0.0.0/8"),
+    ip_network("100.64.0.0/10"),
+    ip_network("169.254.0.0/16"),
+    ip_network("::1/128"),
+    ip_network("fc00::/7"),
+    ip_network("fe80::/10"),
+]
+
+
+def _is_blocked_url(url: str) -> bool:
+    """Проверить, указывает ли URL на внутреннюю/заблокированную сеть.
+
+    Args:
+        url: URL для проверки.
+
+    Returns:
+        True если URL указывает на заблокированный адрес.
+    """
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if not hostname:
+            return True
+
+        # Блокируем localhost-имена
+        if hostname in ("localhost", "localhost.localdomain"):
+            return True
+
+        # Проверяем IP-адрес
+        try:
+            ip = ip_address(hostname)
+            for network in _BLOCKED_NETWORKS:
+                if ip in network:
+                    return True
+        except ValueError:
+            # Не IP-адрес — хостнейм, пропускаем
+            pass
+
+        return False
+    except Exception:
+        return True
 
 
 class ImageProcessor:
@@ -94,6 +143,9 @@ class ImageProcessor:
         Returns:
             Имя файла или None при ошибке.
         """
+        # SSRF-защита: блокируем внутренние IP
+        if _is_blocked_url(url):
+            return None
         attachments_dir = self.output_dir / self.images_dir
         attachments_dir.mkdir(parents=True, exist_ok=True)
 
@@ -163,7 +215,11 @@ class ImageProcessor:
         path = path.split("?")[0].split("#")[0]
         return Path(path).suffix.lower()
 
-    def _replace_image_links(self, markdown: str, replacements: dict) -> str:
+    def _replace_image_links(
+        self,
+        markdown: str,
+        replacements: dict[str, tuple[str, int | None]],
+    ) -> str:
         """Заменить ссылки на изображения в Markdown на Obsidian-эмбеды."""
         def _replace(match: re.Match) -> str:
             url = match.group(3) or match.group(2)

@@ -151,12 +151,12 @@ class TestFetchArticle:
         assert result.success is False
         assert result.status == "error"
 
-    def test_fetch_article_empty_content(self) -> None:
+    def test_fetch_article_empty_content(self, tmp_path: Path) -> None:
         """Извлечение пустого контента."""
         transport = _make_transport(text="<html><body></body></html>")
         result = fetch_article(
             "https://example.com/empty",
-            output_dir="/tmp/empty.md",
+            output_dir=str(tmp_path / "empty.md"),
             transport=transport,
         )
         assert result.success is False
@@ -208,6 +208,24 @@ class TestFetchArticles:
             transport=transport,
         )
         assert len(results) == 2
+
+    def test_fetch_articles_with_real_delay(self, tmp_path: Path) -> None:
+        """Пакетное извлечение с реальной задержкой > 0."""
+        import time
+        transport = _make_transport()
+        output_dir = tmp_path / "delayed_real"
+        output_dir.mkdir()
+        start = time.monotonic()
+        results = fetch_articles(
+            ["https://example.com/d1", "https://example.com/d2"],
+            output_dir=str(output_dir),
+            delay=0.05,  # 50ms задержка
+            transport=transport,
+        )
+        elapsed = time.monotonic() - start
+        assert len(results) == 2
+        # Задержка должна добавить хотя бы ~50ms к общему времени
+        assert elapsed >= 0.04
 
 
 class TestMain:

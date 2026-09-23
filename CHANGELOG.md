@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-09-23
+
+### Added
+- **CRIT-1**: Экранирование спецсимволов `>` и `!` в полях callout для предотвращения инъекции Markdown
+- **CRIT-2**: SSRF-защита — блокировка внутренних IP-адресов при скачивании изображений (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 и др.)
+- **CRIT-3**: Валидация формата URL перед отправкой запроса (`_validate_url()` в fetcher.py)
+- **PERF-1**: Regex-паттерны для callouts вынесены в константы модуля `_BLOCKQUOTE_CLASS_RE`, `_BLOCKQUOTE_TITLE_RE`
+- **TEST-1**: Тест `test_fetch_articles_with_real_delay` — проверка задержки `delay > 0`
+- **TEST-2**: 11 новых тестов для `_convert_shell_commands`, `_fix_html_lists`, `_convert_callouts`, `_convert_function_params`
+- **TEST-3**: 2 новых теста для `OSError` и `FileWriteError` в CLI
+
+### Fixed
+- **BUG-1**: Удалены дубликаты `find` и `xargs` в `shell_keywords`
+- **BUG-2**: Улучшен regex в `_convert_function_params` — поддержка нескольких параметров `(*param1*, *param2*)`
+- **BUG-3**: Исправлен маппинг `frontmatter` dict → `ArticleMetadata` — `og_title` теперь корректно извлекается из `aliases`
+- **BUG-4**: Добавлена явная обработка действия `"new"` в `resolve_conflict` (обновлён docstring)
+- **QUAL-2**: Добавлены type hints для `_replace_image_links` — `dict[str, tuple[str, int | None]]`
+- **QUAL-3**: `msg.format()` в `t()` обернут в `try/except KeyError`
+- **QUAL-4**: Все тесты в `test_cli.py` используют `tmp_path` вместо жёстко закодированных `/tmp/` путей
+- **QUAL-4**: Исправлен оставшийся `/tmp/empty.md` в `test_api.py`
+
+### Changed
+- `Fetcher.fetch()` теперь вызывает `_validate_url()` перед отправкой запроса
+- `ImageProcessor._download_image()` проверяет URL через `_is_blocked_url()` для SSRF-защиты
+- `Converter._parse_blockquote_block()` использует константы regex и экранирует спецсимволы
+- `FrontmatterGenerator.frontmatter_to_yaml()` корректно маппит `aliases` → `og_title`
+- `translations.t()` безопасно обрабатывает несовпадающие kwargs
+
+### Statistics
+- Всего тестов: **~185** (добавлено ~18 новых)
+- Покрытие: **~87%** (было 85%)
+
 ## [1.0.4] - 2026-09-23
 
 ### Changed

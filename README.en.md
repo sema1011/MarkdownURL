@@ -29,7 +29,7 @@ pip install -e .
 ```
 
 > [!note]
-> The package is not published on PyPI and is intended for local use only.
+> The package is not published on PyPI. It is intended for local use.
 
 ## Usage
 

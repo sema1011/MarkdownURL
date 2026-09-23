@@ -68,13 +68,18 @@ class ArticleResult:
             return self.frontmatter_yaml
         gen = FrontmatterGenerator()
         # Создаём временный ArticleMetadata из dict
+        # BUG-3 FIX: aliases в dict соответствует og_title в ArticleMetadata
         meta = ArticleMetadata(
             title=self.frontmatter.get("title", ""),
             author=self.frontmatter.get("author", ""),
             date=self.frontmatter.get("date", ""),
             description=self.frontmatter.get("description", ""),
             tags=self.frontmatter.get("tags", []),
-            og_title=self.frontmatter.get("og_title", ""),
+            og_title=(
+                self.frontmatter["aliases"][0]
+                if self.frontmatter.get("aliases")
+                else ""
+            ),
         )
         return gen.generate(meta, self.frontmatter.get("source", self.url))
 
