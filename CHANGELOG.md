@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.5] - 2026-09-23
+## [1.0.4] - 2026-09-23
+
+### Fixed
+- **BUG-14**: Удалены `¶` (U+00B6) и zero-width space (U+200B) из Markdown-вывода
 
 ### Added
 - **converter.py**: 4 новых шага постобработки Markdown после trafilatura
@@ -17,18 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Порядок шагов в `Converter.convert()`: HTML-теги → параметры → списки → shell-команды → остальное
 - Уважение к ``` блокам: `_convert_shell_commands` и `_fix_html_lists` пропускают содержимое кода
+- `pyproject.toml` — добавлены `exclude` для `hatch.build` (исключены tests, кэши из билдов)
 
 ### Fixed
 - Shell-команды извлекаются как ```bash блоки вместо текста (ubuntu.ru)
 - Код-блоки не обрастают `- ` маркерами списков (deso.onl)
-
-## [1.0.4] - 2026-09-23
-
-### Fixed
-- **BUG-14**: Удалены `¶` (U+00B6) и zero-width space (U+200B) из Markdown-вывода
-
-### Changed
-- `pyproject.toml` — добавлены `exclude` для `hatch.build` (исключены tests, кэши из билдов)
 
 ## [1.0.3] - 2026-09-23
 
