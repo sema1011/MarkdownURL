@@ -157,9 +157,7 @@ class Converter:
             if re.match(r'^[|;&>]+', stripped):
                 return True
             # Строка вида: GOPROXY=... go ...
-            if re.match(r'^[A-Z_]+=.*\s+go\s+', stripped):
-                return True
-            return False
+            return bool(re.match(r'^[A-Z_]+=.*\s+go\s+', stripped))
 
         def _flush_buffer() -> None:
             nonlocal buffer
