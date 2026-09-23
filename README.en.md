@@ -179,6 +179,17 @@ tags:
 | Image downloading | — | ✅ |
 | CI/CD integration | — | ✅ |
 
+## Security
+
+MarkdownURL includes protection against common vulnerabilities:
+
+- **SSRF protection** — blocks requests to internal IP addresses when downloading images (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8, ::1, fc00::/7, etc.)
+- **URL validation** — checks URL format and scheme before sending requests (http/https only)
+- **Callout escaping** — special characters `>` and `!` in callout titles and body are escaped to prevent Markdown injection
+
+> [!warning]
+> This tool is intended for use with trusted sources. Do not use with unknown or malicious URLs.
+
 ## Architecture
 
 ```
@@ -189,9 +200,9 @@ markdownurl/
 ├── converter.py         # Markdown post-processing
 ├── exceptions.py        # Custom exceptions
 ├── extractor.py         # Content extraction (trafilatura)
-├── fetcher.py           # HTTP client (httpx, retry)
+├── fetcher.py           # HTTP client (httpx, retry, URL validation)
 ├── frontmatter.py       # YAML frontmatter (PyYAML)
-├── images.py            # Image downloading
+├── images.py            # Image downloading (SSRF protection)
 ├── namer.py             # File name generation
 └── translations.py      # i18n (ru/en)
 ```
