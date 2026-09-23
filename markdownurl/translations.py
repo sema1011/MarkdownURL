@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import locale
 import os
 
@@ -121,9 +122,6 @@ def t(key: str, **kwargs: str) -> str:
     """
     msg = T.get(key, key)
     if kwargs:
-        try:
+        with contextlib.suppress(KeyError, IndexError, ValueError):
             msg = msg.format(**kwargs)
-        except (KeyError, IndexError, ValueError):
-            # Если аргументы не соответствуют шаблону, возвращаем без форматирования
-            pass
     return msg

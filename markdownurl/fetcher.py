@@ -54,7 +54,7 @@ def _validate_url(url: str) -> None:
     except FetchError:
         raise
     except Exception as exc:
-        raise FetchError(url, f"Недопустимый формат URL: {exc}")
+        raise FetchError(url, f"Недопустимый формат URL: {exc}") from None
 
 
 class Fetcher:

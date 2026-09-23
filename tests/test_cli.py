@@ -360,7 +360,6 @@ class TestCLI:
     # TEST-3: Тесты для OSError и FileWriteError
     def test_cli_os_error_on_write(self, runner: CliRunner, tmp_path: Path) -> None:
         """CLI обрабатывает OSError при записи (недоступная директория)."""
-        import os
         import stat
 
         # Создаём недоступную для записи директорию
