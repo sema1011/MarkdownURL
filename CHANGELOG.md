@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Shell-команды извлекаются как ```bash блоки вместо текста (ubuntu.ru)
 - Код-блоки не обрастают `- ` маркерами списков (deso.onl)
+- **QUAL-15**: Ruff SIM103 — возврат условия напрямую вместо `if ... return True`
 
 ## [1.0.3] - 2026-09-23
 
